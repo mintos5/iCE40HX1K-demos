@@ -1,16 +1,20 @@
-set_io clock100 15
-set_io reset 1
-set_io rxd 36
-set_io txd 37
+set_io clock 21
+
+set_io rxd 9
+set_io txd 8
 set_io --warn-no-port swi[0] 41
 set_io --warn-no-port swi[1] 42
-set_io led1 40
-set_io led2 51
 
-set_io sck  20
-set_io ss   21
-set_io din  24
-set_io dout 25
+set_io led1 99
+set_io led2 98
+set_io led3 97
+set_io led4 96
+set_io led5 95
+
+set_io --warn-no-port sck  70
+set_io --warn-no-port ss   71
+set_io --warn-no-port din  68
+set_io --warn-no-port dout 67
 
 set_io --warn-no-port sd[0] 62
 set_io --warn-no-port sd[1] 63
@@ -51,4 +55,3 @@ set_io --warn-no-port sa[17] 100
 set_io --warn-no-port soe 74
 set_io --warn-no-port swe 73
 set_io --warn-no-port scs 78
-

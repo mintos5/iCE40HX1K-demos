@@ -8,7 +8,7 @@ all: $(PROJ).rpt $(PROJ).bin
 	yosys -p 'synth_ice40 -top l80soc -blif $@' $<
 
 %.asc: $(PIN_DEF) %.blif
-	arachne-pnr -d $(subst hx,,$(subst lp,,$(DEVICE))) -o $@ -p $^ -P vq100
+	arachne-pnr -d $(subst hx,,$(subst lp,,$(DEVICE))) -o $@ -p $^
 
 %.bin: %.asc
 	icepack $< $@
@@ -24,6 +24,10 @@ sudo-prog: $(PROJ).bin
 	sudo iceprogduino $<
 
 clean:
-	rm -f $(PROJ).blif $(PROJ).asc $(PROJ).bin
+	rm -f $(PROJ).blif $(PROJ).asc $(PROJ).bin $(PROJ).vvp $(PROJ).vcd
 
-.PHONY: all prog clean
+sim:
+	iverilog -s tb_l80soc -o $(PROJ).vvp tb.v
+	vvp $(PROJ).vvp
+
+.PHONY: all prog clean sim

@@ -1,10 +1,8 @@
 `include "intr_ctrl.v"
 `include "light8080.v"
 `include "micro_rom.v"
-`include "ram_image.v"
-`include "uart_rx.v"
-`include "uart_tx.v"
-`include "spi_master.v"
+`include "osdvu/uart.v"
+`include "membram.v"
 
 //---------------------------------------------------------------------------------------
 //	Project:			light8080 SOC		WiCores Solutions 
@@ -38,34 +36,42 @@
 
 module l80soc 
 (
-	clock100, reset,
+	clock,
 	txd, rxd, // RS232
-	p1dio, p2dio, 
-  din, ss, sck, dout, // SPI
-	extint, led1, led2
+	//p1dio, p2dio, 
+  	//din, ss, sck, dout, // SPI
+	//extint, led1, led2
+	led1, led2, led3, led4, led5
 );
 //---------------------------------------------------------------------------------------
 // module interfaces 
 // global signals 
-input 			clock100;		// global clock input 
-input 			reset;		// global reset input 
+input 			clock;		// global clock input 
+reg 			reset = 1'b1;		// global reset input 
 // uart serial signals 
 output			txd;		// serial data output 
 input			rxd;		// serial data input 
 // digital IO ports 
 // inout	[7:0]	p1dio;		// port 1 digital IO 
 // inout	[7:0]	p2dio;		// port 2 digital IO 
-output	[7:0]	p1dio;		// port 1 digital IO 
-output	[7:0]	p2dio;		// port 2 digital IO 
+//output	[7:0]	p1dio;		// port 1 digital IO 
+//output	[7:0]	p2dio;		// port 2 digital IO 
 // external interrupt sources 
-input	[3:0]	extint;		// external interrupt sources 
+reg	[3:0]	extint;				// external interrupt sources
+reg [2:0] reset_state = 3'd0;	//reset state	
+reg [4:0] led_state = 5'd0;		// state of leds 
 output led1;
 output led2;
+output led3;
+output led4;
+output led5;
+assign {led5, led4, led3, led2, led1} = led_state[4:0];
+
 // SPI
-input din;
-output reg ss;
-output reg sck;
-output reg dout;
+// input din;
+// output reg ss;
+// output reg sck;
+// output reg dout;
 
 //---------------------------------------------------------------------------------------
 // io space registers addresses 
@@ -89,16 +95,6 @@ output reg dout;
 // internal declarations 
 // registered output 
 
-reg	[1:0]		clk_div;	// 2 bit counter
-wire			clock;	
-
-assign 	clock 	= clk_div[1];		// 25Mhz clock = 100Mhz divided by 2-bit counter
-assign 	led1 	= clk_div[25];		// 25Mhz clock = 100Mhz divided by 2-bit counter
-
-always @ (posedge clock100) begin		// 2-bt counter ++ on each positive edge of 100Mhz clock
-	clk_div <= clk_div + 2'b1;
-end
-
 // internals 
 wire [15:0] cpu_addr;
 wire [7:0] cpu_din, cpu_dout, ram_dout, intr_dout;
@@ -111,6 +107,28 @@ reg rxfull, scpu_io;
 reg spifull;
 reg [7:0] p1reg, p1dir, p2reg, p2dir, io_dout;
 reg [3:0] intr_ena;
+
+// reset button 
+always @ (posedge clock) 
+begin
+	//led_state <= 5'b10000;	
+	case (reset_state)
+	3'd 0 : begin reset <= 1'b 1; reset_state <= 3'd 1; end
+	3'd 1 : begin reset <= 1'b 0; reset_state <= 3'd 2; end
+	3'd 2 : begin reset <= 1'b 0; reset_state <= 3'd 3; end
+	3'd 3 : begin reset <= 1'b 0; reset_state <= 3'd 4; end
+	3'd 4 : begin reset <= 1'b 0; reset_state <= 3'd 5; end
+
+	3'd 5 : begin reset_state <= 3'd 6; 
+			end
+	3'd 6 : begin reset_state <= 3'd 7;
+			end
+	3'd 7 : begin reset_state <= 3'd 7;
+			end
+	default : begin reset_state <= 3'd 0; end
+	endcase
+
+end
 
 //---------------------------------------------------------------------------------------
 // module implementation 
@@ -136,14 +154,17 @@ light8080 cpu
 // cpu data input selection 
 assign cpu_din = (cpu_inta) ? intr_dout : (scpu_io) ? io_dout : ram_dout;
 
-// program and data Xilinx RAM memory 
-ram_image ram 
+//new RAM from hex
+membram #(8, "firmware/test.vhex", (1<<6)-1) rom
 (
-	.clk(clock), 
-	.addr(cpu_addr[11:0]), 
-	.we(cpu_wr & ~cpu_io), 
-	.din(cpu_dout), 
-	.dout(ram_dout) 
+	.clk		(clock),
+	.reset		(reset),
+	.data_out	(ram_dout),
+	.data_in	(cpu_dout),
+	.cs			(1'b1),
+	.rd			(~cpu_wr & ~cpu_io),
+	.wr			(cpu_wr & ~cpu_io),
+	.addr		(cpu_addr[7:0])
 );
 
 // io space write registers 
@@ -199,8 +220,8 @@ begin
 			io_dout <= rxData;
 		else if (cpu_io && (cpu_addr[7:0] == `USTAT_REG))
 			io_dout <= {3'b0, rxfull, 3'b0, txBusy};
-		else if (cpu_io && (cpu_addr[7:0] == `SPI_RX_REG))
-			io_dout <= spiRxdata;
+//		else if (cpu_io && (cpu_addr[7:0] == `SPI_RX_REG))
+//			io_dout <= spiRxdata;
 
 //		else if (cpu_io && (cpu_addr[7:0] == `P1_DATA_REG))
 //			io_dout <= p1dio;
@@ -226,40 +247,38 @@ intr_ctrl intrc
 	.intr_ena(intr_ena) 
 );
 
-assign txBusy = ~txDone;
+//assign txBusy = ~txDone;
 
-RS232T RS232T(
-    .clk(clock), 
-    .rst(reset),
-    .start(txValid),
-    .data(cpu_dout),
-    .rdy(txDone),
-    .TxD(txd),
+uart #(
+		.baud_rate(9600),                 // The baud rate in kilobits/s
+		.sys_clk_freq(12000000)           // The master clock frequency
+)
+RS232(
+	.clk(clock),
+	.rst(reset),
+	.rx(rxd),
+	.tx(txd),
+	.transmit(txValid),
+	.tx_byte(cpu_dout),
+	.rx_byte(rxData),
+	.received(rxValid),
+	.is_transmitting(txBusy)
 );
 
-RS232R RS232R(
-    .clk(clock), 
-    .rst(reset),
-    .rdy(rxValid),
-    .done(~rxfull),
-    .RxD(rxd),
-    .data(rxData)
-);
-
-spi_master spi_master(
-  .rstb(~reset),
-  .clk(clock),
-  .mlb(1'b1), // MSB first???
-  .start(spiValid),
-  .tdat(cpu_dout),
-  .cdiv(3), // :32
-  .din(din),
-  .ss(ss),
-  .sck(sck),
-  .dout(dout),
-  .done(spiFull),
-  .rdata(spiRxData)
-);
+// spi_master spi_master(
+//   .rstb(~reset),
+//   .clk(clock),
+//   .mlb(1'b1), // MSB first???
+//   .start(spiValid),
+//   .tdat(cpu_dout),
+//   .cdiv(3), // :32
+//   .din(din),
+//   .ss(ss),
+//   .sck(sck),
+//   .dout(dout),
+//   .done(spiFull),
+//   .rdata(spiRxData)
+// );
 
 // digital IO ports 
 // port 1 
