@@ -3,6 +3,7 @@
 `include "micro_rom.v"
 `include "osdvu/uart.v"
 `include "membram.v"
+`include "power/pmu.v"
 
 //---------------------------------------------------------------------------------------
 //	Project:			light8080 SOC		WiCores Solutions 
@@ -102,6 +103,12 @@ wire cpu_io, cpu_rd, cpu_wr, cpu_inta, cpu_inte, cpu_intr;
 wire [7:0] txData, rxData;
 wire [7:0] spiRxData;
 wire txValid, txBusy, rxValid;
+
+//clocks
+wire speed_clock;
+wire slow_clock1;
+wire slow_clock2;
+wire slow_clock3;
 // reg [15:0] uartbaud;
 reg rxfull, scpu_io;
 reg spifull;
@@ -109,7 +116,7 @@ reg [7:0] p1reg, p1dir, p2reg, p2dir, io_dout;
 reg [3:0] intr_ena;
 
 // reset button 
-always @ (posedge clock) 
+always @ (posedge slow_clock2) 
 begin
 	//led_state <= 5'b10000;	
 	case (reset_state)
@@ -131,11 +138,42 @@ begin
 end
 
 //---------------------------------------------------------------------------------------
-// module implementation 
+// module implementation
+
+// PLL
+SB_PLL40_CORE #(.FEEDBACK_PATH("SIMPLE"),
+                  .PLLOUT_SELECT("GENCLK"),
+                  .DIVR(4'b0000),
+                  .DIVF(7'b0111111),
+                  .DIVQ(3'b100),
+                  .FILTER_RANGE(3'b001),
+                 ) uut (
+                         .REFERENCECLK(clock),
+                         .PLLOUTCORE(speed_clock),
+                         //.PLLOUTGLOBAL(clk),
+                         // .LOCK(D5),
+                         .RESETB(1'b1),
+                         .BYPASS(1'b0)
+                        );
+
+
+//PMU
+power_manager pmu
+(
+	.clk(clock),
+	.pll_clk(speed_clock),
+	//.reset(1'b0),
+	// .change(clock),
+	// .change_vector(cpu_dout),
+	.clock1(slow_clock1),
+	.clock2(slow_clock2),
+	.clock3(slow_clock3)
+);
+
 // light8080 CPU instance 
 light8080 cpu 
 (  
-	.clk(clock), 
+	.clk(slow_clock2), 
 	.reset(reset), 
 	.addr_out(cpu_addr), 
 	.vma(/* nu */), 
@@ -157,7 +195,7 @@ assign cpu_din = (cpu_inta) ? intr_dout : (scpu_io) ? io_dout : ram_dout;
 //new RAM from hex
 membram #(8, "firmware/test.vhex", (1<<6)-1) rom
 (
-	.clk		(clock),
+	.clk		(slow_clock2),
 	.reset		(reset),
 	.data_out	(ram_dout),
 	.data_in	(cpu_dout),
@@ -168,7 +206,7 @@ membram #(8, "firmware/test.vhex", (1<<6)-1) rom
 );
 
 // io space write registers 
-always @ (posedge reset or posedge clock) 
+always @ (posedge reset or posedge slow_clock1) 
 begin 
 	if (reset) 
 	begin 
@@ -207,7 +245,7 @@ assign txValid = cpu_wr & cpu_io & (cpu_addr[7:0] == `UDATA_REG);
 assign spiValid = cpu_wr & cpu_io & (cpu_addr[7:0] == `SPI_TX_REG);
 
 // io space read registers 
-always @ (posedge reset or posedge clock) 
+always @ (posedge reset or posedge slow_clock2) 
 begin 
 	if (reset) 
 	begin 
@@ -236,7 +274,7 @@ end
 // interrupt controller 
 intr_ctrl intrc 
 (
-	.clock(clock), 
+	.clock(slow_clock2), 
 	.reset(reset),
 	.ext_intr(extint), 
 	.cpu_intr(cpu_intr), 
@@ -254,7 +292,7 @@ uart #(
 		.sys_clk_freq(12000000)           // The master clock frequency
 )
 RS232(
-	.clk(clock),
+	.clk(slow_clock1),
 	.rst(reset),
 	.rx(rxd),
 	.tx(txd),
