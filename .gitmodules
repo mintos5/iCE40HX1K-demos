@@ -1,0 +1,7 @@
+[submodule "asm8080"]
+	path = asm8080
+	url = https://github.com/begoon/asm8080.git
+[submodule "8080demo/osdvu"]
+	path = 8080demo/osdvu
+	url = https://github.com/cyrozap/osdvu.git
+	branch = aaron_dahlen
