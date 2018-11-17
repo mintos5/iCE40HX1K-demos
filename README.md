@@ -1,2 +1,5 @@
-# iCE40HX1K-EVB
-Designs for the Olimex iCE40HX1K-EVB board
+# iCE40HX1K Demos
+Designs for the Lattice iCEstick board
+
+Resources:
+SOC for light8080 cpu from Michael Engel
