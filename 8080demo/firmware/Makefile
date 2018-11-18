@@ -13,4 +13,4 @@ $(FIRMWARE_IMG).vhex:
 	SRECCAT $(FIRMWARE_IMG).hex -intel -o $(FIRMWARE_IMG).vhex -VMem 8
 
 # ./asm8080 ../../projects/iCE40HX1K-EVB/8080test/firmware/test.asm
-# 
+# srec_cat ./test.hex -intel -o test.vhex -VMem 8

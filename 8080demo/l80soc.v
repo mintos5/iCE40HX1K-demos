@@ -94,7 +94,7 @@ assign {led5, led4, led3, led2, led1} = led_state[4:0];
 // `define SPI_TX_REG   		8'h90		// interrupts enable register 
 // `define SPI_RX_REG  		8'h90		// interrupts enable register 
 
-`define PMU_REG				8'h70		// used for setting the freq of CPU
+`define PMU_REG				8'h90		// used for setting the freq of CPU
 
 //---------------------------------------------------------------------------------------
 // internal declarations 
@@ -217,7 +217,7 @@ light8080 cpu
 assign cpu_din = (cpu_inta) ? intr_dout : (scpu_io) ? io_dout : ram_dout;
 
 //new RAM from hex
-membram #(8, "firmware/test.vhex", (1<<6)-1) rom
+membram #(8, "firmware/test.vhex", (1<<8)-1) rom
 (
 	.clk		(slow_clock2),
 	.reset		(reset),
