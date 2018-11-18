@@ -4,6 +4,8 @@
 `include "osdvu/uart.v"
 `include "membram.v"
 `include "power/pmu.v"
+`include "power/cross_bus.v"
+`include "power/cross_flag.v"
 
 //---------------------------------------------------------------------------------------
 //	Project:			light8080 SOC		WiCores Solutions 
@@ -60,7 +62,7 @@ input			rxd;		// serial data input
 // external interrupt sources 
 reg	[3:0]	extint;				// external interrupt sources
 reg [2:0] reset_state = 3'd0;	//reset state	
-reg [4:0] led_state = 5'd0;		// state of leds 
+reg [4:0] led_state = 5'b00000;		// state of leds 
 output led1;
 output led2;
 output led3;
@@ -112,7 +114,8 @@ wire slow_clock3;
 // reg [15:0] uartbaud;
 reg rxfull, scpu_io;
 reg spifull;
-reg [7:0] p1reg, p1dir, p2reg, p2dir, io_dout;
+//reg [7:0] p1reg, p1dir, p2reg, p2dir, io_dout;
+reg [7:0] io_dout;
 reg [3:0] intr_ena;
 
 // reset button 
@@ -137,10 +140,24 @@ begin
 
 end
 
+reg regular_reset = 1'b1;
+reg regular_reset_counter = 1'b1;
+always @ (posedge clock) 
+begin
+	if (regular_reset_counter) begin
+		regular_reset <= 1'b1;
+		regular_reset_counter <= 1'b0;
+	end
+	else begin
+		regular_reset <= 1'b0;
+	end
+
+end
 //---------------------------------------------------------------------------------------
 // module implementation
 
 // PLL
+//assign speed_clock = clock;
 SB_PLL40_CORE #(.FEEDBACK_PATH("SIMPLE"),
                   .PLLOUT_SELECT("GENCLK"),
                   .DIVR(4'b0000),
@@ -162,7 +179,7 @@ power_manager pmu
 (
 	.clk(clock),
 	.pll_clk(speed_clock),
-	//.reset(1'b0),
+	.reset(regular_reset),
 	// .change(clock),
 	// .change_vector(cpu_dout),
 	.clock1(slow_clock1),
@@ -206,17 +223,17 @@ membram #(8, "firmware/test.vhex", (1<<6)-1) rom
 );
 
 // io space write registers 
-always @ (posedge reset or posedge slow_clock1) 
+always @ (posedge reset or posedge slow_clock2) 
 begin 
 	if (reset) 
 	begin 
 		// uartbaud <= 16'd12;
 		rxfull <= 1'b0;
 		spifull <= 1'b0;
-		p1reg <= 8'b0;
-		p1dir <= 8'b0;
-		p2reg <= 8'b0;
-		p2dir <= 8'b0;
+		//p1reg <= 8'b0;
+		//p1dir <= 8'b0;
+		//p2reg <= 8'b0;
+		//p2dir <= 8'b0;
 		intr_ena <= 4'b0;
 	end 
 	else 
@@ -234,7 +251,7 @@ begin
 		end 
 		
 		// receiver full flag 
-		if (rxValid && !rxfull) 
+		if (rxValidSpeed && !rxfull) 
 			rxfull <= 1'b1;
 		else if (cpu_rd && cpu_io && (cpu_addr[7:0] == `UDATA_REG) && rxfull)
 			rxfull <= 1'b0;
@@ -249,7 +266,7 @@ always @ (posedge reset or posedge slow_clock2)
 begin 
 	if (reset) 
 	begin 
-		io_dout <= 8'b0;
+		//io_dout <= 8'b0;
 	end 
 	else 
 	begin 
@@ -257,7 +274,7 @@ begin
 		if (cpu_io && (cpu_addr[7:0] == `UDATA_REG))
 			io_dout <= rxData;
 		else if (cpu_io && (cpu_addr[7:0] == `USTAT_REG))
-			io_dout <= {3'b0, rxfull, 3'b0, txBusy};
+			io_dout <= {3'b0, rxfull, 3'b0, txValidBusy | txBusy};
 //		else if (cpu_io && (cpu_addr[7:0] == `SPI_RX_REG))
 //			io_dout <= spiRxdata;
 
@@ -287,6 +304,11 @@ intr_ctrl intrc
 
 //assign txBusy = ~txDone;
 
+wire txValidSpeed;
+wire txValidBusy;
+wire [7:0] txDataSpeed;
+wire rxValidSpeed;
+
 uart #(
 		.baud_rate(9600),                 // The baud rate in kilobits/s
 		.sys_clk_freq(12000000)           // The master clock frequency
@@ -296,12 +318,56 @@ RS232(
 	.rst(reset),
 	.rx(rxd),
 	.tx(txd),
-	.transmit(txValid),
-	.tx_byte(cpu_dout),
+	.transmit(txValidSpeed),
+	.tx_byte(txDataSpeed),
 	.rx_byte(rxData),
 	.received(rxValid),
 	.is_transmitting(txBusy)
 );
+
+// wire [7:0] rxDataSpeed;
+// wire rxValidSpeed;
+// BusAck_CrossDomain uartToCpu(
+// 	.clkA(slow_clock1),
+// 	.rst(regular_reset),
+// 	.FlagIn_clkA(rxValid),
+// 	//.Busy_clkA()
+// 	.clkB(slow_clock3),
+//     .FlagOut_clkB(rxValidSpeed),
+//  	.BusIn(rxData),
+//  	.BusOut(rxDataSpeed)
+// );
+FlagAck_CrossDomain uartToCpu(
+	.clkA(slow_clock1),
+	.rstA(regular_reset),
+	.FlagIn_clkA(rxValid),
+	//Busy_clkA(),
+	.clkB(slow_clock2),
+	.rstB(reset),
+	.FlagOut_clkB(rxValidSpeed)
+);
+
+BusAck_CrossDomain cpuToUartBus(
+	.clkA(slow_clock2),
+	.rstA(reset),
+	.FlagIn_clkA(txValid),
+	.Busy_clkA(txValidBusy),
+	.clkB(slow_clock1),
+	.rstB(regular_reset),
+	.FlagOut_clkB(txValidSpeed),
+	.BusIn(cpu_dout),
+	.BusOut(txDataSpeed)
+);
+
+//TODO
+
+//todo docielit aby fungoval cpu na vyssej frekvencii oproti uartu, ktory bude bezat vzdy na stalej frekvencii
+//len tak zo srandy tam dat vga?
+//nastavvovat txBusy skor ako treba, pomocou synchronizera
+//rxValid urcite bude potrebovat osetrenie
+//txValid
+//reset vzdy pomaly...
+//txBusy by sa mal tiez osetrit
 
 // spi_master spi_master(
 //   .rstb(~reset),

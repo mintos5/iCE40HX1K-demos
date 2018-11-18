@@ -1,7 +1,7 @@
 module power_manager(
     input clk,                  // The master clock for this module
     input pll_clk,
-    //input reset,                  // Synchronous reset
+    input reset,                  // Synchronous reset
     // input change,             // Assert to begin change of system
     // input [7:0] change_vector,        // Byte to transmit
     output wire clock1,   // Low when receive line is idle.
@@ -19,23 +19,21 @@ reg clock1_fr1 = 1'b0;
 reg clock1_fr2 = 1'b1;
 reg clock1_fr3 = 1'b0;
 
-reg pll_clock2_en = 1'b0;
-reg default_clock2_en = 1'b1;
+reg pll_clock2_en = 1'b1;
+reg default_clock2_en = 1'b0;
 reg clock2_fr1 = 1'b0;
-reg clock2_fr2 = 1'b1;
-reg clock2_fr3 = 1'b0;
+reg clock2_fr2 = 1'b0;
+reg clock2_fr3 = 1'b1;
 
 reg pll_clock3_en = 1'b0;
 reg default_clock3_en = 1'b0;
-reg clock3_fr1 = 1'b0;
+reg clock3_fr1 = 1'b1;
 reg clock3_fr2 = 1'b0;
 reg clock3_fr3 = 1'b0;
 
 reg [20:0] clock_div1 = 21'h16e360;
 reg [20:0] clock_div2 = 21'h5000;
 reg [20:0] clock_div3 = 21'h10;
-
-reg reset_state = 1'd1;
 
 reg [23:0] seconds_counter = 24'd12000000;
 reg [7:0] timer = 8'd20;
@@ -51,13 +49,12 @@ assign clock3 = (pll_clock3_en) ? pll_clk : (default_clock3_en) ? clk : clock3_r
 
 always @ (posedge clk) 
 begin 
-    if (reset_state) begin
+    if (reset) begin
         seconds_counter <= 24'd12000000;
         timer <= 8'd20;
         clock_div1 <= 21'h16e360;
         clock_div2 <= 21'h800;
         clock_div3 = 21'h10;
-        reset_state <= 1'd0;
     end
     else begin
         //FREQ1
@@ -181,19 +178,19 @@ begin
 
 
                 //example of pll, def, divided
-                // if (pll_clock2_en) begin
-                //     pll_clock2_en <= 1'b0;
-                // end
-                // else begin
-                    if (default_clock2_en) begin
-                        default_clock2_en <= 1'b0;
-                    end
-                    else begin
-                        default_clock2_en <= 1'b1;
-                        //pll_clock1_en <= 1'b1;
-                    end
-                //     //pll_clock2_en <= 1'b1;
-                // end
+                if (pll_clock2_en) begin
+                    pll_clock2_en <= 1'b0;
+                end
+                else begin
+                    // if (default_clock2_en) begin
+                    //     default_clock2_en <= 1'b0;
+                    // end
+                    // else begin
+                    //     default_clock2_en <= 1'b1;
+                    //     //pll_clock1_en <= 1'b1;
+                    // end
+                    pll_clock2_en <= 1'b1;
+                end
 
                 
                 // ZMENA FREKVENCIE
