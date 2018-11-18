@@ -80,19 +80,21 @@ assign {led5, led4, led3, led2, led1} = led_state[4:0];
 // io space registers addresses 
 // uart registers 
 `define UDATA_REG			8'h80 		// used for both transmit and receive 
-`define UBAUDL_REG			8'h81		// low byte of baud rate register 
-`define UBAUDH_REG			8'h82		// low byte of baud rate register 
+// `define UBAUDL_REG			8'h81		// low byte of baud rate register 
+// `define UBAUDH_REG			8'h82		// low byte of baud rate register 
 `define USTAT_REG			8'h83		// uart status register 
 // dio port registers 
-`define P1_DATA_REG			8'h84		// port 1 data register 
-`define P1_DIR_REG			8'h85		// port 1 direction register 
-`define P2_DATA_REG			8'h86		// port 2 data register 
-`define P2_DIR_REG			8'h87		// port 2 direction register 
+// `define P1_DATA_REG			8'h84		// port 1 data register 
+// `define P1_DIR_REG			8'h85		// port 1 direction register 
+// `define P2_DATA_REG			8'h86		// port 2 data register 
+// `define P2_DIR_REG			8'h87		// port 2 direction register 
 // interrupt controller register 
-`define INTR_EN_REG			8'h88		// interrupts enable register 
+// `define INTR_EN_REG			8'h88		// interrupts enable register 
 
-`define SPI_TX_REG   		8'h90		// interrupts enable register 
-`define SPI_RX_REG  		8'h90		// interrupts enable register 
+// `define SPI_TX_REG   		8'h90		// interrupts enable register 
+// `define SPI_RX_REG  		8'h90		// interrupts enable register 
+
+`define PMU_REG				8'h70		// used for setting the freq of CPU
 
 //---------------------------------------------------------------------------------------
 // internal declarations 
@@ -142,6 +144,7 @@ end
 
 reg regular_reset = 1'b1;
 reg regular_reset_counter = 1'b1;
+
 always @ (posedge clock) 
 begin
 	if (regular_reset_counter) begin
@@ -174,14 +177,18 @@ SB_PLL40_CORE #(.FEEDBACK_PATH("SIMPLE"),
                         );
 
 
+
+wire pmu_changer;
+wire pmu_changerSpeed;
+wire [7:0] pmu_busSpeed;
 //PMU
 power_manager pmu
 (
 	.clk(clock),
 	.pll_clk(speed_clock),
 	.reset(regular_reset),
-	// .change(clock),
-	// .change_vector(cpu_dout),
+	.change(pmu_changerSpeed),
+	.change_vector(pmu_busSpeed),
 	.clock1(slow_clock1),
 	.clock2(slow_clock2),
 	.clock3(slow_clock3)
@@ -234,21 +241,21 @@ begin
 		//p1dir <= 8'b0;
 		//p2reg <= 8'b0;
 		//p2dir <= 8'b0;
-		intr_ena <= 4'b0;
+		//intr_ena <= 4'b0;
 	end 
 	else 
 	begin 
 		// io space registers 
-		if (cpu_wr && cpu_io) 
-		begin 
+		//if (cpu_wr && cpu_io) 
+		// begin 
 			// if (cpu_addr[7:0] == `UBAUDL_REG)	uartbaud[7:0] <= cpu_dout;
 			// if (cpu_addr[7:0] == `UBAUDH_REG)	uartbaud[15:8] <= cpu_dout;
 			// if (cpu_addr[7:0] == `P1_DATA_REG)	p1reg <= cpu_dout;
 			// if (cpu_addr[7:0] == `P1_DIR_REG)	p1dir <= cpu_dout;
 			// if (cpu_addr[7:0] == `P2_DATA_REG)	p2reg <= cpu_dout;
 			// if (cpu_addr[7:0] == `P2_DIR_REG)	p2dir <= cpu_dout;
-			if (cpu_addr[7:0] == `INTR_EN_REG)	intr_ena <= cpu_dout[3:0];
-		end 
+			// if (cpu_addr[7:0] == `INTR_EN_REG)	intr_ena <= cpu_dout[3:0];
+		// end 
 		
 		// receiver full flag 
 		if (rxValidSpeed && !rxfull) 
@@ -259,7 +266,10 @@ begin
 end 
 // uart transmit write pulse 
 assign txValid = cpu_wr & cpu_io & (cpu_addr[7:0] == `UDATA_REG);
-assign spiValid = cpu_wr & cpu_io & (cpu_addr[7:0] == `SPI_TX_REG);
+//assign spiValid = cpu_wr & cpu_io & (cpu_addr[7:0] == `SPI_TX_REG);
+
+// pmu trans
+assign pmu_changer = cpu_wr & cpu_io & (cpu_addr[7:0] == `PMU_REG);
 
 // io space read registers 
 always @ (posedge reset or posedge slow_clock2) 
@@ -275,6 +285,8 @@ begin
 			io_dout <= rxData;
 		else if (cpu_io && (cpu_addr[7:0] == `USTAT_REG))
 			io_dout <= {3'b0, rxfull, 3'b0, txValidBusy | txBusy};
+//		else if (cpu_io && (cpu_addr[7:0] == `PMU_STAT_REG))
+//			io_dout <= {7'b0, pmu_busy};
 //		else if (cpu_io && (cpu_addr[7:0] == `SPI_RX_REG))
 //			io_dout <= spiRxdata;
 
@@ -289,18 +301,18 @@ begin
 end 
 
 // interrupt controller 
-intr_ctrl intrc 
-(
-	.clock(slow_clock2), 
-	.reset(reset),
-	.ext_intr(extint), 
-	.cpu_intr(cpu_intr), 
-	.cpu_inte(cpu_inte), 
-	.cpu_inta(cpu_inta), 
-	.cpu_rd(cpu_rd), 
-	.cpu_inst(intr_dout), 
-	.intr_ena(intr_ena) 
-);
+// intr_ctrl intrc 
+// (
+// 	.clock(slow_clock3), 
+// 	.reset(reset),
+// 	.ext_intr(extint), 
+// 	.cpu_intr(cpu_intr), 
+// 	.cpu_inte(cpu_inte), 
+// 	.cpu_inta(cpu_inta), 
+// 	.cpu_rd(cpu_rd), 
+// 	.cpu_inst(intr_dout), 
+// 	.intr_ena(intr_ena) 
+// );
 
 //assign txBusy = ~txDone;
 
@@ -359,15 +371,22 @@ BusAck_CrossDomain cpuToUartBus(
 	.BusOut(txDataSpeed)
 );
 
+
+BusAck_CrossDomain cpuToPMU(
+	.clkA(slow_clock2),
+	.rstA(reset),
+	.FlagIn_clkA(pmu_changer),
+	//.Busy_clkA(pmu_busy),
+	.clkB(slow_clock1),
+	.rstB(regular_reset),
+	.FlagOut_clkB(pmu_changerSpeed),
+	.BusIn(cpu_dout),
+	.BusOut(pmu_busSpeed)
+);
+
 //TODO
 
-//todo docielit aby fungoval cpu na vyssej frekvencii oproti uartu, ktory bude bezat vzdy na stalej frekvencii
 //len tak zo srandy tam dat vga?
-//nastavvovat txBusy skor ako treba, pomocou synchronizera
-//rxValid urcite bude potrebovat osetrenie
-//txValid
-//reset vzdy pomaly...
-//txBusy by sa mal tiez osetrit
 
 // spi_master spi_master(
 //   .rstb(~reset),
