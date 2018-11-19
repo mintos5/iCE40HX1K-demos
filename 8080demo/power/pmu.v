@@ -43,9 +43,9 @@ reg [2:0] clock3_setter = 3'b000;
 // reg clock3_fr2 = 1'b0;
 // reg clock3_fr3 = 1'b0;
 
-reg [20:0] clock_div1 = 21'h16e360;
-reg [20:0] clock_div2 = 21'h5000;
-reg [20:0] clock_div3 = 21'h01;
+reg [3:0] clock_div1 = 4'h4;
+reg [14:0] clock_div2 = 15'h5000;
+reg [1:0] clock_div3 = 2'h1;
 
 
 //todo rewrite it to reset portion of code
@@ -59,17 +59,17 @@ assign clock3 = (clock3_setter == `SET_PLL) ? pll_clk : (clock3_setter == `SET_C
 always @ (posedge clk) begin 
     if (reset) begin
         //dividers for frequency
-        clock_div1 <= 21'h16e360;
-        clock_div2 <= 21'h800;
-        clock_div3 = 21'h01;
+        clock_div1 <= 4'h4;
+        clock_div2 <= 15'h5000;
+        clock_div3 = 2'h1;
     end
     else begin
         //FREQ1
         if (clock_div1) begin
-            clock_div1 <= clock_div1 - 21'd1;
+            clock_div1 <= clock_div1 - 4'd1;
         end
         else begin
-            clock_div1 <= 21'h16e360;
+            clock_div1 <= 4'h4;
             //clock1
             if (clock1_setter == `SET_FR1) begin
                 if (!clock1_reg) begin
@@ -102,10 +102,10 @@ always @ (posedge clk) begin
 
         //FREQ2
         if (clock_div2) begin
-            clock_div2 <= clock_div2 - 21'd1;
+            clock_div2 <= clock_div2 - 15'd1;
         end
         else begin
-            clock_div2 <= 21'h5000;
+            clock_div2 <= 15'h5000;
             //clock1
             if (clock1_setter == `SET_FR2) begin
                 if (!clock1_reg) begin
@@ -137,10 +137,10 @@ always @ (posedge clk) begin
 
         //FREQ3
         if (clock_div3) begin
-            clock_div3 <= clock_div3 - 21'd1;
+            clock_div3 <= clock_div3 - 2'd1;
         end
         else begin
-            clock_div3 <= 21'h01;
+            clock_div3 <= 2'h1;
             //clock1
             if (clock1_setter == `SET_FR3) begin
                 if (!clock1_reg) begin

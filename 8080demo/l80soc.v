@@ -6,6 +6,7 @@
 `include "power/pmu.v"
 `include "power/cross_bus.v"
 `include "power/cross_flag.v"
+`include "vga/vga.v"
 
 //---------------------------------------------------------------------------------------
 //	Project:			light8080 SOC		WiCores Solutions 
@@ -404,6 +405,8 @@ BusAck_CrossDomain cpuToPMU(
 	.BusIn(cpu_dout),
 	.BusOut(pmu_busSpeed)
 );
+
+
 
 //TODO
 
