@@ -61,7 +61,7 @@ input			rxd;		// serial data input
 //output	[7:0]	p2dio;		// port 2 digital IO 
 // external interrupt sources 
 reg	[3:0]	extint;				// external interrupt sources
-reg [2:0] reset_state = 3'd0;	//reset state	
+reg reset_state = 1'b1;	//reset state	
 reg [4:0] led_state = 5'b00000;		// state of leds 
 output led1;
 output led2;
@@ -121,41 +121,62 @@ reg [7:0] io_dout;
 reg [3:0] intr_ena;
 
 // reset button 
-always @ (posedge slow_clock2) 
-begin
-	//led_state <= 5'b10000;	
-	case (reset_state)
-	3'd 0 : begin reset <= 1'b 1; reset_state <= 3'd 1; end
-	3'd 1 : begin reset <= 1'b 0; reset_state <= 3'd 2; end
-	3'd 2 : begin reset <= 1'b 0; reset_state <= 3'd 3; end
-	3'd 3 : begin reset <= 1'b 0; reset_state <= 3'd 4; end
-	3'd 4 : begin reset <= 1'b 0; reset_state <= 3'd 5; end
-
-	3'd 5 : begin reset_state <= 3'd 6; 
-			end
-	3'd 6 : begin reset_state <= 3'd 7;
-			end
-	3'd 7 : begin reset_state <= 3'd 7;
-			end
-	default : begin reset_state <= 3'd 0; end
-	endcase
-
-end
-
-reg regular_reset = 1'b1;
-reg regular_reset_counter = 1'b1;
-
 always @ (posedge clock) 
 begin
-	if (regular_reset_counter) begin
-		regular_reset <= 1'b1;
-		regular_reset_counter <= 1'b0;
+	if (reset_state) begin
+		reset <= 1'b1;
+		reset_state <= 1'b0;
 	end
 	else begin
-		regular_reset <= 1'b0;
+		reset <= 1'b0;
+	end
+end
+
+reg reset1 = 1'b1;
+reg reset1_counter = 1'b1;
+
+always @ (posedge slow_clock1) 
+begin
+	if (reset1_counter) begin
+		reset1 <= 1'b1;
+		reset1_counter <= 1'b0;
+	end
+	else begin
+		reset1 <= 1'b0;
 	end
 
 end
+
+reg reset2 = 1'b1;
+reg reset2_counter = 1'b1;
+
+always @ (posedge slow_clock2) 
+begin
+	if (reset2_counter) begin
+		reset2 <= 1'b1;
+		reset2_counter <= 1'b0;
+	end
+	else begin
+		reset2 <= 1'b0;
+	end
+
+end
+
+reg reset3 = 1'b1;
+reg reset3_counter = 1'b1;
+
+always @ (posedge slow_clock3) 
+begin
+	if (reset3_counter) begin
+		reset3 <= 1'b1;
+		reset3_counter <= 1'b0;
+	end
+	else begin
+		reset3 <= 1'b0;
+	end
+
+end
+
 //---------------------------------------------------------------------------------------
 // module implementation
 
@@ -186,7 +207,7 @@ power_manager pmu
 (
 	.clk(clock),
 	.pll_clk(speed_clock),
-	.reset(regular_reset),
+	.reset(reset),
 	.change(pmu_changerSpeed),
 	.change_vector(pmu_busSpeed),
 	.clock1(slow_clock1),
@@ -198,7 +219,7 @@ power_manager pmu
 light8080 cpu 
 (  
 	.clk(slow_clock2), 
-	.reset(reset), 
+	.reset(reset2), 
 	.addr_out(cpu_addr), 
 	.vma(/* nu */), 
 	.io(cpu_io), 
@@ -220,7 +241,7 @@ assign cpu_din = (cpu_inta) ? intr_dout : (scpu_io) ? io_dout : ram_dout;
 membram #(8, "firmware/test.vhex", (1<<8)-1) rom
 (
 	.clk		(slow_clock2),
-	.reset		(reset),
+	.reset		(reset2),
 	.data_out	(ram_dout),
 	.data_in	(cpu_dout),
 	.cs			(1'b1),
@@ -230,9 +251,9 @@ membram #(8, "firmware/test.vhex", (1<<8)-1) rom
 );
 
 // io space write registers 
-always @ (posedge reset or posedge slow_clock2) 
+always @ (posedge reset2 or posedge slow_clock2) 
 begin 
-	if (reset) 
+	if (reset2) 
 	begin 
 		// uartbaud <= 16'd12;
 		rxfull <= 1'b0;
@@ -272,9 +293,9 @@ assign txValid = cpu_wr & cpu_io & (cpu_addr[7:0] == `UDATA_REG);
 assign pmu_changer = cpu_wr & cpu_io & (cpu_addr[7:0] == `PMU_REG);
 
 // io space read registers 
-always @ (posedge reset or posedge slow_clock2) 
+always @ (posedge reset2 or posedge slow_clock2) 
 begin 
-	if (reset) 
+	if (reset2) 
 	begin 
 		//io_dout <= 8'b0;
 	end 
@@ -323,11 +344,11 @@ wire rxValidSpeed;
 
 uart #(
 		.baud_rate(9600),                 // The baud rate in kilobits/s
-		.sys_clk_freq(12000000)           // The master clock frequency
+		.sys_clk_freq(3000000)           // The master clock frequency
 )
 RS232(
 	.clk(slow_clock1),
-	.rst(reset),
+	.rst(reset1),
 	.rx(rxd),
 	.tx(txd),
 	.transmit(txValidSpeed),
@@ -351,21 +372,21 @@ RS232(
 // );
 FlagAck_CrossDomain uartToCpu(
 	.clkA(slow_clock1),
-	.rstA(regular_reset),
+	.rstA(reset1),
 	.FlagIn_clkA(rxValid),
 	//Busy_clkA(),
 	.clkB(slow_clock2),
-	.rstB(reset),
+	.rstB(reset2),
 	.FlagOut_clkB(rxValidSpeed)
 );
 
 BusAck_CrossDomain cpuToUartBus(
 	.clkA(slow_clock2),
-	.rstA(reset),
+	.rstA(reset2),
 	.FlagIn_clkA(txValid),
 	.Busy_clkA(txValidBusy),
 	.clkB(slow_clock1),
-	.rstB(regular_reset),
+	.rstB(reset1),
 	.FlagOut_clkB(txValidSpeed),
 	.BusIn(cpu_dout),
 	.BusOut(txDataSpeed)
@@ -374,11 +395,11 @@ BusAck_CrossDomain cpuToUartBus(
 
 BusAck_CrossDomain cpuToPMU(
 	.clkA(slow_clock2),
-	.rstA(reset),
+	.rstA(reset2),
 	.FlagIn_clkA(pmu_changer),
 	//.Busy_clkA(pmu_busy),
 	.clkB(slow_clock1),
-	.rstB(regular_reset),
+	.rstB(reset1),
 	.FlagOut_clkB(pmu_changerSpeed),
 	.BusIn(cpu_dout),
 	.BusOut(pmu_busSpeed)
