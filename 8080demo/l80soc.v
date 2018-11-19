@@ -45,7 +45,8 @@ module l80soc
 	//p1dio, p2dio, 
   	//din, ss, sck, dout, // SPI
 	//extint, led1, led2
-	led1, led2, led3, led4, led5
+	led1, led2, led3, led4, led5,
+	hsync,vsync,r0,r1,g0,g1,b0,b1
 );
 //---------------------------------------------------------------------------------------
 // module interfaces 
@@ -71,6 +72,15 @@ output led4;
 output led5;
 assign {led5, led4, led3, led2, led1} = led_state[4:0];
 
+
+output hsync;		//horizontal sync out
+output vsync;		//vertical sync out
+output r0;
+output r1;
+output g0;
+output g1;
+output b0;
+output b1;
 // SPI
 // input din;
 // output reg ss;
@@ -185,8 +195,8 @@ end
 //assign speed_clock = clock;
 SB_PLL40_CORE #(.FEEDBACK_PATH("SIMPLE"),
                   .PLLOUT_SELECT("GENCLK"),
-                  .DIVR(4'b0000),
-                  .DIVF(7'b0111111),
+                  .DIVR(4'b0001),
+                  .DIVF(7'b1000010),
                   .DIVQ(3'b100),
                   .FILTER_RANGE(3'b001),
                  ) uut (
@@ -406,6 +416,18 @@ BusAck_CrossDomain cpuToPMU(
 	.BusOut(pmu_busSpeed)
 );
 
+vga gpu(
+	.clk(slow_clock3),		//pll clock: 25.13MHz
+	.clr(reset3),			//asynchronous reset
+	.hsync(hsync),		//horizontal sync out
+	.vsync(vsync),		//vertical sync out
+	.r0(r0),
+	.r1(r1),
+	.g0(g0),
+	.g1(g1),
+	.b0(b0),
+	.b1(b1)
+);
 
 
 //TODO
