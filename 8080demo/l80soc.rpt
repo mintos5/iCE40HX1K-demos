@@ -1,0 +1,29 @@
+
+icetime topological timing analysis report
+==========================================
+
+Info: max_span_hack is enabled: estimate is conservative.
+
+Report for critical path:
+-------------------------
+
+        loop-start at net_10356
+        odrv_6_2_10356_185 (Odrv12) I -> O: 0.540 ns
+        t2527 (LocalMux) I -> O: 0.330 ns
+        inmux_6_2_12544_12585 (InMux) I -> O: 0.260 ns
+        lc40_6_2_2 (LogicCell40) in0 -> lcout: 0.449 ns
+1000001.578 ns net_10356 (intrc.int_vec[7])
+        odrv_6_2_10356_12513 (Odrv4) I -> O: 0.372 ns
+        t2530 (LocalMux) I -> O: 0.330 ns
+        inmux_7_1_14510_14534 (InMux) I -> O: 0.260 ns
+1000002.539 ns net_14534 (intrc.int_vec[7])
+        lc40_7_1_2 (LogicCell40) in3 [setup]: 0.217 ns
+1000002.756 ns net_12337 (intrc.cpu_inst[0])
+
+Resolvable net names on path:
+1000001.578 ns ..1000002.539 ns intrc.int_vec[7]
+                  lcout -> intrc.cpu_inst[0]
+
+Total number of logic levels: 2
+Total path delay: 1000002.76 ns (0.00 MHz)
+
