@@ -1,0 +1,3 @@
+icemulti ./l80soc.bin ./reconf_counter.bin -o ./combined.bin -v
+iceprog ./combined.bin
+
