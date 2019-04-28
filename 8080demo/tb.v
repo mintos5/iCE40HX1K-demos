@@ -1,6 +1,34 @@
 `include "l80soc.v"
 `timescale 1us/1us
 
+
+module SB_PLL40_CORE(
+    input REFERENCECLK,
+    output PLLOUTCORE,
+    output PLLOUTGLOBAL,
+    input RESETB,
+    input BYPASS
+);
+
+    parameter FEEDBACK_PATH = "SIMPLE";
+    parameter PLLOUT_SELECT = "GENCLK";
+    parameter DIVR = 4'b0000;
+    parameter DIVF = 7'b0111111;
+    parameter DIVQ = 3'b100;
+    parameter FILTER_RANGE = 3'b001;
+
+    assign PLLOUTCORE = REFERENCECLK;
+    assign PLLOUTGLOBAL = REFERENCECLK;
+
+endmodule
+
+module SB_WARMBOOT(
+    input BOOT,
+    input S1,
+    input S0
+);
+endmodule
+
 module tb_l80soc;
 
     initial begin
@@ -8,9 +36,9 @@ module tb_l80soc;
         $dumpvars;
 
         delay(90);
-        test_rcvr(8'h55);
+        test_rcvr(8'h36);
         delay(95000);
-        //delay(70000000);
+        delay(95000);
         $finish;
         //# 250E3 $finish;
         //# 1E6 $finish;

@@ -1,0 +1,109 @@
+
+icetime topological timing analysis report
+==========================================
+
+Info: max_span_hack is enabled: estimate is conservative.
+
+Report for critical path:
+-------------------------
+
+        lc40_2_8_2 (LogicCell40) [clk] -> lcout: 0.640 ns
+     0.640 ns net_2911 (c1.counter[0])
+        odrv_2_8_2911_5280 (Odrv4) I -> O: 0.372 ns
+        t56 (Span4Mux_h4) I -> O: 0.316 ns
+        t55 (LocalMux) I -> O: 0.330 ns
+        inmux_6_8_13285_13312 (InMux) I -> O: 0.260 ns
+        lc40_6_8_0 (LogicCell40) in1 -> carryout: 0.260 ns
+     2.176 ns t3
+        lc40_6_8_1 (LogicCell40) carryin -> carryout: 0.126 ns
+     2.302 ns net_13316 ($auto$alumacc.cc:474:replace_alu$19.C[2]$2)
+        lc40_6_8_2 (LogicCell40) carryin -> carryout: 0.126 ns
+     2.428 ns net_13322 ($auto$alumacc.cc:474:replace_alu$19.C[3]$2)
+        lc40_6_8_3 (LogicCell40) carryin -> carryout: 0.126 ns
+     2.555 ns net_13328 ($auto$alumacc.cc:474:replace_alu$19.C[4]$2)
+        lc40_6_8_4 (LogicCell40) carryin -> carryout: 0.126 ns
+     2.681 ns net_13334 ($auto$alumacc.cc:474:replace_alu$19.C[5]$2)
+        lc40_6_8_5 (LogicCell40) carryin -> carryout: 0.126 ns
+     2.807 ns net_13340 ($auto$alumacc.cc:474:replace_alu$19.C[6]$2)
+        lc40_6_8_6 (LogicCell40) carryin -> carryout: 0.126 ns
+     2.933 ns net_13346 ($auto$alumacc.cc:474:replace_alu$19.C[7]$2)
+        lc40_6_8_7 (LogicCell40) carryin -> carryout: 0.126 ns
+     3.060 ns net_13352 ($auto$alumacc.cc:474:replace_alu$19.C[8]$2)
+        t5 (ICE_CARRY_IN_MUX) carryinitin -> carryinitout: 0.196 ns
+        lc40_6_9_0 (LogicCell40) carryin -> carryout: 0.126 ns
+     3.382 ns net_13433 ($auto$alumacc.cc:474:replace_alu$19.C[9]$2)
+        lc40_6_9_1 (LogicCell40) carryin -> carryout: 0.126 ns
+     3.509 ns net_13439 ($auto$alumacc.cc:474:replace_alu$19.C[10]$2)
+        lc40_6_9_2 (LogicCell40) carryin -> carryout: 0.126 ns
+     3.635 ns net_13445 ($auto$alumacc.cc:474:replace_alu$19.C[11]$2)
+        lc40_6_9_3 (LogicCell40) carryin -> carryout: 0.126 ns
+     3.761 ns net_13451 ($auto$alumacc.cc:474:replace_alu$19.C[12]$2)
+        lc40_6_9_4 (LogicCell40) carryin -> carryout: 0.126 ns
+     3.887 ns net_13457 ($auto$alumacc.cc:474:replace_alu$19.C[13]$2)
+        lc40_6_9_5 (LogicCell40) carryin -> carryout: 0.126 ns
+     4.013 ns net_13463 ($auto$alumacc.cc:474:replace_alu$19.C[14]$2)
+        lc40_6_9_6 (LogicCell40) carryin -> carryout: 0.126 ns
+     4.140 ns net_13469 ($auto$alumacc.cc:474:replace_alu$19.C[15]$2)
+        lc40_6_9_7 (LogicCell40) carryin -> carryout: 0.126 ns
+     4.266 ns net_13475 ($auto$alumacc.cc:474:replace_alu$19.C[16]$2)
+        t9 (ICE_CARRY_IN_MUX) carryinitin -> carryinitout: 0.196 ns
+        lc40_6_10_0 (LogicCell40) carryin -> carryout: 0.126 ns
+     4.589 ns net_13556 ($auto$alumacc.cc:474:replace_alu$19.C[17]$2)
+        lc40_6_10_1 (LogicCell40) carryin -> carryout: 0.126 ns
+     4.715 ns net_13562 ($auto$alumacc.cc:474:replace_alu$19.C[18]$2)
+        lc40_6_10_2 (LogicCell40) carryin -> carryout: 0.126 ns
+     4.841 ns net_13568 ($auto$alumacc.cc:474:replace_alu$19.C[19]$2)
+        lc40_6_10_3 (LogicCell40) carryin -> carryout: 0.126 ns
+     4.967 ns net_13574 ($auto$alumacc.cc:474:replace_alu$19.C[20]$2)
+        lc40_6_10_4 (LogicCell40) carryin -> carryout: 0.126 ns
+     5.094 ns net_13580 ($auto$alumacc.cc:474:replace_alu$19.C[21]$2)
+        lc40_6_10_5 (LogicCell40) carryin -> carryout: 0.126 ns
+     5.220 ns net_13586 ($auto$alumacc.cc:474:replace_alu$19.C[22]$2)
+        lc40_6_10_6 (LogicCell40) carryin -> carryout: 0.126 ns
+     5.346 ns net_13592 ($auto$alumacc.cc:474:replace_alu$19.C[23]$2)
+        inmux_6_10_13592_13602 (InMux) I -> O: 0.260 ns
+        lc40_6_10_7 (LogicCell40) in3 -> lcout: 0.316 ns
+     5.921 ns net_11381 ($auto$alumacc.cc:474:replace_alu$19.C[23])
+        t148 (LocalMux) I -> O: 0.330 ns
+        inmux_5_10_11438_11451 (InMux) I -> O: 0.260 ns
+        lc40_5_10_0 (LogicCell40) in3 -> lcout: 0.316 ns
+     6.826 ns net_9266 ($abc$384$n93)
+        odrv_5_10_9266_11280 (Odrv4) I -> O: 0.372 ns
+        t94 (LocalMux) I -> O: 0.330 ns
+        inmux_5_11_11550_11603 (InMux) I -> O: 0.260 ns
+        t15 (CascadeMux) I -> O: 0.000 ns
+     7.787 ns net_11603_cascademuxed
+        lc40_5_11_5 (LogicCell40) in2 [setup]: 0.323 ns
+     8.109 ns net_9394 ($abc$384$n38)
+
+Resolvable net names on path:
+     0.640 ns ..  1.916 ns c1.counter[0]
+     2.302 ns ..  2.302 ns $auto$alumacc.cc:474:replace_alu$19.C[2]$2
+     2.428 ns ..  2.428 ns $auto$alumacc.cc:474:replace_alu$19.C[3]$2
+     2.555 ns ..  2.555 ns $auto$alumacc.cc:474:replace_alu$19.C[4]$2
+     2.681 ns ..  2.681 ns $auto$alumacc.cc:474:replace_alu$19.C[5]$2
+     2.807 ns ..  2.807 ns $auto$alumacc.cc:474:replace_alu$19.C[6]$2
+     2.933 ns ..  2.933 ns $auto$alumacc.cc:474:replace_alu$19.C[7]$2
+     3.060 ns ..  3.256 ns $auto$alumacc.cc:474:replace_alu$19.C[8]$2
+     3.382 ns ..  3.382 ns $auto$alumacc.cc:474:replace_alu$19.C[9]$2
+     3.509 ns ..  3.509 ns $auto$alumacc.cc:474:replace_alu$19.C[10]$2
+     3.635 ns ..  3.635 ns $auto$alumacc.cc:474:replace_alu$19.C[11]$2
+     3.761 ns ..  3.761 ns $auto$alumacc.cc:474:replace_alu$19.C[12]$2
+     3.887 ns ..  3.887 ns $auto$alumacc.cc:474:replace_alu$19.C[13]$2
+     4.013 ns ..  4.013 ns $auto$alumacc.cc:474:replace_alu$19.C[14]$2
+     4.140 ns ..  4.140 ns $auto$alumacc.cc:474:replace_alu$19.C[15]$2
+     4.266 ns ..  4.462 ns $auto$alumacc.cc:474:replace_alu$19.C[16]$2
+     4.589 ns ..  4.589 ns $auto$alumacc.cc:474:replace_alu$19.C[17]$2
+     4.715 ns ..  4.715 ns $auto$alumacc.cc:474:replace_alu$19.C[18]$2
+     4.841 ns ..  4.841 ns $auto$alumacc.cc:474:replace_alu$19.C[19]$2
+     4.967 ns ..  4.967 ns $auto$alumacc.cc:474:replace_alu$19.C[20]$2
+     5.094 ns ..  5.094 ns $auto$alumacc.cc:474:replace_alu$19.C[21]$2
+     5.220 ns ..  5.220 ns $auto$alumacc.cc:474:replace_alu$19.C[22]$2
+     5.346 ns ..  5.606 ns $auto$alumacc.cc:474:replace_alu$19.C[23]$2
+     5.921 ns ..  6.510 ns $auto$alumacc.cc:474:replace_alu$19.C[23]
+     6.826 ns ..  7.787 ns $abc$384$n93
+                  lcout -> $abc$384$n38
+
+Total number of logic levels: 26
+Total path delay: 8.11 ns (123.31 MHz)
+
